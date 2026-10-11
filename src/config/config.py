@@ -1,30 +1,45 @@
 import os
-
 from faster_whisper import WhisperModel
 
-OLLAMA_URL = "http://localhost:41134/api/chat"
-OLLAMA_MODEL = "qwen2.5:3b-instruct"
-WHISPER_MODEL_SIZE = "small" # tiny/base/small/medium
-WHISPER_LANG = "pt"
 
-PIPER_VOICE = os.path.expanduser("~/.local/share/piper-voices/pt_BR-faber-medium.onnx")
+class Config:
+    def __init__(self, config):
+        self.config = config
 
-SAMPLE_RATE = 16000
 
-AGENDA_PATH = os.path.expanduser("~/.agenda.txt")
+# Ollama
+OLLAMA_URL = os.getenv("OLLAMA_URL")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
 
+# Whisper
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL_SIZE", "base")
+WHISPER_LANG = os.getenv("WHISPER_LANG")
 WHISPER_MODEL = WhisperModel(
     model_size_or_path=WHISPER_MODEL_SIZE,
     device="cpu",
     compute_type="int8"
 )
 
-whisper_model = WhisperModel(
-    WHISPER_MODEL_SIZE,
-    device="cpu",
-    compute_type="int8"
-)
+# Piper
+PIPER_VOICE = os.path.expanduser(os.getenv("PIPER_VOICE", ""))
+SAMPLE_RATE = os.getenv("SAMPLE_RATE", 16000)
 
-SYSTEM_PROMPT = ""
+# Agent
+AGENT_NAME = os.getenv("AGENT_NAME")
 
-AGENT_NAME = "Jarvis"
+# Calendar
+AGENDA_PATH = os.path.expanduser("~/.agenda.txt")
+
+# User
+USER_NAME = os.getenv("USER_NAME")
+
+# Authorized Paths
+AUTHORIZED_PATHS = {
+    f"~/{USER_NAME}/Programas/agent/",
+    f"~/{USER_NAME}/Downloads/"
+}
+
+# System Prompt
+SYSTEM_PROMPT = """
+
+"""

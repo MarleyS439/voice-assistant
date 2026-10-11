@@ -33,7 +33,7 @@ init(autoreset=True)
 OLLAMA_URL = "http://localhost:11434/api/chat"
 OLLAMA_MODEL = "qwen2.5:3b-instruct"  # leve o suficiente pra 6-8GB de RAM livre, sem GPU
 
-WHISPER_MODEL_SIZE = "base"   # tiny/base/small/medium (maior = mais preciso, mais lento)
+WHISPER_MODEL_SIZE = "small"   # tiny/base/small/medium (maior = mais preciso, mais lento)
 WHISPER_LANG = "pt"
 
 PIPER_VOICE = os.path.expanduser(
@@ -136,14 +136,14 @@ def acao_hora_data(params: dict) -> str:
 
 ACOES_PERMITIDAS = {
     "abrir_app": acao_abrir_app,
-    "ler_agenda": acao_ler_agenda,
+    # "ler_agenda": acao_ler_agenda,
     "adicionar_agenda": acao_adicionar_agenda,
     "hora_data": acao_hora_data,
 }
 
 SYSTEM_PROMPT = f"""Você é um assistente de voz local, respondendo sempre em português do Brasil.
 
-Você pode fazer duas coisas:
+Você pode fazer as seguintes coisas:
 1. Responder normalmente em texto.
 2. Pedir para executar UMA ação, respondendo SOMENTE com um JSON no formato:
    {{"acao": "nome_da_acao", "params": {{...}}}}
@@ -164,12 +164,13 @@ Ações disponíveis: {list(ACOES_PERMITIDAS.keys())}
     - kcalc: calculadora
     - lutris: gerenciador/launcher de jogos (o usuário pode falar só "jogos" ou "launcher de jogos")
     Se o usuário pedir algo vago (ex: "meu editor preferido"), use o contexto da conversa; se não tiver contexto suficiente, pergunte qual dos editores ele quer em vez de adivinhar.
-- ler_agenda: params={{}}
 - adicionar_agenda: params={{"texto": "descrição do compromisso"}}
 - hora_data: params={{"tipo": "hora"|"data"|"ambos"}} (use quando o usuário perguntar as horas, o dia, ou ambos)
 
 Se o pedido do usuário não corresponder a nenhuma ação, apenas responda normalmente em texto,
 de forma curta e natural, como numa conversa falada. Nunca invente ações fora da lista.
+
+3. Conversar normalmente e de forma descontraída. Não use markdown para responder. Apenas texto puro.
 """
 
 # ---------------------------------------------------------------------------
