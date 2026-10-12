@@ -1,6 +1,7 @@
 import csv
 import getpass
 import io
+import shlex
 import sys
 import psutil
 import subprocess
@@ -10,7 +11,13 @@ class ProcessHelper:
 
     @staticmethod
     def start(command: str) -> subprocess.Popen:
-        return subprocess.Popen(command)
+        """Inicia um processo em background.
+
+        Aceita string simples ('firefox') ou com argumentos ('firefox --new-window').
+        Sempre executa em sessão nova para não bloquear o agente.
+        """
+        args = shlex.split(command)
+        return subprocess.Popen(args, start_new_session=True)
 
     @staticmethod
     def find_by_name(name: str) -> dict[int, str]:

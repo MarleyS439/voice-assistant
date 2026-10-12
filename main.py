@@ -1,35 +1,71 @@
 #!/usr/bin/env python3
-import sys
-from colorama import Fore, Style
+"""Entry point do assistente de voz local.
 
-from actions.interaction import Interaction
+Instancia todas as camadas, injeta dependências no VoiceAgent e
+lança a janela Qt (PySide6).
+"""
+
+import sys
+from pathlib import Path
+
+# Garante que src/ está no PYTHONPATH
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from PySide6.QtWidgets import QApplication
+
+from audio.stt import STT
+from audio.tts import TTS
+from llm.ollama import OllamaClient
+from memory.conversation import Conversation
+from skills.registry import SkillRegistry
+from skills.application.skill import Application
+from skills.filesystem.skill import FileSystem
+from skills.weather.skill import Weather
+from skills.browser.skill import Browser
+from skills.terminal.skill import Terminal
+from skills.memory.skill import Memory
+from agent.voice_agent import VoiceAgent
+from ui.main_window import MainWindow
+
+
+def build_registry() -> SkillRegistry:
+    """Registra todas as skills disponíveis."""
+    registry = SkillRegistry()
+    registry.register(Application())
+    registry.register(FileSystem())
+    registry.register(Weather())
+    registry.register(Browser())
+    registry.register(Terminal())
+    registry.register(Memory())
+    return registry
 
 
 def main() -> None:
-    """"""
+    # 1. Skills
+    registry = build_registry()
 
-    print(Fore.LIGHTGREEN_EX + "Agente de voz local pronto. Ctrl+C para sair.\n" + Style.RESET_ALL)
+    # 2. Memória (precisa das tools para o system prompt)
+    conversation = Conversation(tools=registry.tools())
 
-    try:
-        while True:
-            path = Interaction.record()
-            user_text = Interaction.transcribe(path_wav=path)
-            if not user_text:
-                print(f"{Fore.YELLOW}(Nada entendido, tente de novo)")
-                continue
-            print(f"{Fore.LIGHTGREEN_EX}Você: {user_text}{Style.RESET_ALL}")
+    # 3. Camadas de áudio e LLM
+    stt = STT()
+    tts = TTS()
+    llm = OllamaClient()
 
-            if user_text.lower().strip() in ("sair", "encerrar", "thau"):
-                Interaction.talk("Até mais!")
-                break
+    # 4. Agente
+    agent = VoiceAgent(
+        stt=stt,
+        tts=tts,
+        llm=llm,
+        conversation=conversation,
+        registry=registry,
+    )
 
-            raw_response = Interaction.ask(user_text)
-            final_response = Interaction.process(raw_response)
-            Interaction.talk(final_response)
-
-    except KeyboardInterrupt:
-        print(Fore.YELLOW + "\nEncerrando..." + Style.RESET_ALL)
-        sys.exit(0)
+    # 5. UI Qt
+    app = QApplication(sys.argv)
+    window = MainWindow(agent)
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
